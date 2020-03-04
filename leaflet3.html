@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>Leaflet Exercise</title>
+  <meta charset="utf-8" />
+
+  <!-- Leaflet styles and code. Place in the <head></head> element. -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.4.0/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.4.0/dist/leaflet.js"></script>
+
+  <!-- jQuery is a library that simplifies many things in JavaScript. 
+	     We'll use it to retrieve data from the web. -->
+  <script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
+
+</head>
+
+<body>
+
+<div id="mapid" style="width: 600px; height: 400px;"></div>
+	<!-- Our web map will get placed into this div element -->
+
+  <div id="controls" style="margin: 15px;">
+    <button id="showAllParkingButton">Show All Parking</button>
+
+    <span style="display:inline-block; width: 30px"></span>
+    <input type="text" id="highlightParkingTextEntry"
+           placeholder="Parking Lot Name">
+    <button id="highlightParkingButton">Highlight</button>
+    
+	</div>
+
+  <script>
+    // Make a Leaflet map with L.map().
+    // Store the map in the variable 'map'.
+    // "mapid" is the 'id' of the DOM element to contain the map.
+    var map = L.map('mapid', {
+        center: [49.265637, -123.256113],
+        zoom: 15
+      } // this object holds map options
+    );
+
+    var topoTiles = L.tileLayer(
+      'https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', {
+        maxZoom: 17,
+        attribution: 'Map data: &copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>, <a href="http://viewfinderpanoramas.org">SRTM</a> | Map style: &copy; <a href="https://opentopomap.org">OpenTopoMap</a> (<a href="https://creativecommons.org/licenses/by-sa/3.0/">CC-BY-SA</a>)'
+      }
+    ).addTo(map);
+
+    //var myPoint = L.marker(
+     // [49.265637, -123.256113]
+    //).addTo(map);
+
+    //var myPoly = L.polygon(
+      //[
+        //[49.2797, -123.2678],
+        //[49.2770, -123.2690],
+       // [49.2791, -123.2723],
+       // [49.2797, -123.2678],
+      //], {
+       // color: 'purple',
+       // weight: 6
+     // }
+    //).addTo(map);
+
+    // load GeoJSON from a file on the web
+    // $ is jQuery.
+  //  $.getJSON("https://raw.githubusercontent.com/UBCGeodata/ubcv-parking/master/geojson/ubcv_parking_www.geojson",
+      //function(data) {
+        // Once UBC parking GeoJSON layer is loaded
+        // Then add it to the map 
+     //   L.geoJson(data).addTo(map);
+   // }
+  //  );
+
+    var ParkingMarkerOptions = {
+      radius: 20,
+      fillColor: "#FF0021",
+      color: "#000000",
+      weight: 1,
+      opacity: 0.2,
+      fillOpacity: 0.5
+    };
+    var ParkingMarkerHighlightedOptions = {
+    	radius: 4,
+    	fillColor: "#FF9900",  // Make highlighted parking orange.
+    	color: "#000",
+    	weight: 1,
+    	opacity: 0.3,
+    	fillOpacity: 0.5
+		};
+    
+   //$.getJSON("https://raw.githubusercontent.com/UBCGeodata/ubcv-parking/master/geojson/ubcv_parking_www.geojson",
+     // function(data) {
+        // Once UBC parking GeoJSON layer is loaded
+        //Then add it to the map 
+  //    console.log(data);
+    //   L.geoJSON(data, {
+       //  pointToLayer: function(feature, latlng) {
+       //   return L.circleMarker(
+         //  latlng,
+         //     ParkingMarkerOptions
+         //   );
+        //  },
+        //  onEachFeature: onEachParking
+      //  }).addTo(map);
+     // });
+
+
+
+    function onEachParking(feature, layer) {
+      // does this parking have a property named FAC_DESCRIPTION?
+      if (feature.properties && feature.properties.FAC_DESCRIPTION) {
+        layer.bindTooltip(feature.properties.FAC_DESCRIPTION);
+      }
+    }
+
+    function parkingPointToLayer(feature, latlng) {
+
+      // the next conditional lets us differentiate between the
+      // styling we use when we are highlighting a particular FAC_DESCRIPTION
+      // of parking versus when we are displaying all parking.
+
+      if (FAC_DESCRIPTIONToHighlight === "") {
+        ParkingMarkerOptionsToUse = ParkingMarkerOptions;
+      } else {
+        ParkingMarkerOptionsToUse = ParkingMarkerHighlightedOptions;
+      }
+
+      // for the current feature, make a circleMarker.
+      return L.circleMarker(
+        latlng,
+        parkingMarkerOptionsToUse
+      );
+    }
+
+    function parkingToFilter(feature, layer) {
+      if (FAC_DESCRIPTIONToHighlight === "") {
+        return true;
+        // In this case, we're not highlighting anything, so draw everything.
+      } else if (feature.properties && feature.properties.FAC_DESCRIPTION) {
+        // We just checked to make sure there are properties to avoid an error
+        //   by asking for the .FAC_DESCRIPTION when there are no properties.
+        // Now, we need to check to see if the .FAC_DESCRIPTION matches what we're
+        //   trying to highlight.
+        return feature.properties.FAC_DESCRIPTION.toLowerCase().includes(FAC_DESCRIPTIONToHighlight.toLowerCase());
+        // We ignore uppercase/lowercase differences.
+      } else {
+        return false;
+        // This is for features that lack properties.
+        // Don't display them.
+      }
+    }
+
+    var lastLayerAdded = {};
+    // Keeping track of lastLayerAdded lets us reset the map layers
+    // being shown so we don’t keep on layering new data on old.
+
+    function addParking() {
+      if (map.hasLayer(lastLayerAdded)) { // reset the map layers if relevant.
+        map.removeLayer(lastLayerAdded);
+      }
+      lastLayerAdded = L.geoJSON(parkingGeoJSONdata, {
+        pointToLayer: parkingPointToLayer,
+        onEachFeature: onEachParking,
+        filter: parkingToFilter
+        // filter out parking we aren't looking for,
+        //   if any.
+      }
+      );
+      lastLayerAdded.addTo(map);
+    };
+
+    var FAC_DESCRIPTIONToHighlight = "";
+    // This is set by someone pressing the highlight button.
+    // If it's an empty string, then just draw everything.
+
+    function highlightParking() {
+      FAC_DESCRIPTIONToHighlight = document
+        .getElementById("highlightParkingTextEntry")
+        .value; // get any text from the input box.   
+      addParking(); // add the parking.
+      FAC_DESCRIPTIONToHighlight = ""; // reset so that "Show All parking" works.
+    }
+
+    var ParkingGeoJSONdata; // Where we store parking GeoJSON data
+    // load GeoJSON from a file on the web
+    // $ is jQuery.        
+    $.getJSON("https://raw.githubusercontent.com/UBCGeodata/ubcv-parking/master/geojson/ubcv_parking_www.geojson",
+      function(data) {
+        // Store data for later:
+        ParkingGeoJSONdata = data;
+        // Create event listener for ShowAllParking Button:
+        document
+          .getElementById("showAllParkingButton")
+          .addEventListener("click", addParking);
+        // Create event listener for the highlightParking Button:
+        document
+          .getElementById("highlightParkingButton")
+          .addEventListener("click", highlightParking);
+
+      }
+    );
+  </script>
+
+</body>
+
+</html>
