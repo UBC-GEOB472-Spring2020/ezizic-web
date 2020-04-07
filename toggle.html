@@ -1,0 +1,273 @@
+!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8" />
+<title>Exploring the Relationship between Volcanoes, Earthquakes, and Plate Tectonics</title>
+<meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no" />
+<script src="https://api.mapbox.com/mapbox-gl-js/v1.8.1/mapbox-gl.js"></script>
+<link href="https://api.mapbox.com/mapbox-gl-js/v1.8.1/mapbox-gl.css" rel="stylesheet" />
+<script src='https://api.mapbox.com/mapbox.js/plugins/turf/v3.0.11/turf.min.js'></script>
+<script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
+<style>
+body {
+  margin: 0;
+  padding: 0;
+}
+h2,
+h3 {
+  margin: 10px;
+  font-size: 1.2em;
+}
+h3 {
+  font-size: 1em;
+}
+p {
+  font-size: 0.85em;
+  margin: 10px;
+  text-align: left;
+}
+/**
+* Create a position for the map
+* on the page */
+#map {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 100%;
+}
+/**
+* Set rules for how the map overlays
+* (information box ) will be displayed
+* on the page. */
+.map-overlay {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  background: rgba(255, 255, 255, 0.8);
+  margin-right: 20px;
+  font-family: Helvetica, sans-serif;
+  overflow: auto;
+  border-radius: 3px;
+}
+#features {
+  top: 100;
+  height: 240px;
+  margin-top: 20px;
+  width: 250px;
+};
+.mapboxgl-popup {
+max-width: 400px;
+font: 12px/20px 'Helvetica', Helvetica, Helvetica, sans-serif;
+}
+</style>
+</head>
+<body>
+<div id="map"></div>
+<div class='map-overlay' id='features'><h2>Exploring the Relationship between Volcanoes, Earthquakes, and Plate Tectonics </h2><div id='pd'><p>In the toolbox below, select between the volcanoes, earthquakes, and fault line boxes to view or hide each feature. Explore the different combinations of data to visualize the spatial relationships of natural hazards with one another and plate tectonics.</p></div></div>
+<div class='map-overlay' id='legend'></div>
+<div class='map-overlay' id='legend'></div>
+<title>Show and hide layers</title>
+<meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no" />
+<script src="https://api.mapbox.com/mapbox-gl-js/v1.9.0/mapbox-gl.js"></script>
+<link href="https://api.mapbox.com/mapbox-gl-js/v1.9.0/mapbox-gl.css" rel="stylesheet" />
+<style>
+	body { margin: 0; padding: 0; }
+	#map { position: absolute; top: 0; bottom: 0; width: 100%; }
+</style>
+</head>
+<body>
+<style>
+#menu {
+background: #fff;
+position: absolute;
+z-index: 1;
+top: 375px;
+right: 20px;
+border-radius: 3px;
+width: 120px;
+border: 40px solid rgba(76, 25, 25, 0.5);
+font-family: 'Helvetica', sans-serif;
+}
+#menu a {
+font-size: 13px;
+color: #404040;
+display: block;
+margin: 0;
+padding: 0;
+padding: 10px;
+text-decoration: none;
+border-bottom: 1px solid rgba(0, 0, 0, 0.25);
+text-align: center;
+}
+#menu a:last-child {
+border: none;
+}
+#menu a:hover {
+background-color: #f8f8f8;
+color: #404040;
+}
+#menu a.active {
+background-color: #3887be;
+color: #ffffff;
+}
+#menu a.active:hover {
+background: #3074a4;
+}
+</style>
+<nav id="menu"></nav>
+<div id="map"></div>
+<script>
+var FaultGeoJSONdata;
+$.getJSON("https://raw.githubusercontent.com/seanrouf/finalproject/master/fault_line.geojson",
+    function(data) {
+      					// Store data for later:
+			      		FaultGeoJSONdata = data;
+    console.log(FaultGeoJSONdata);
+  			}
+);
+mapboxgl.accessToken = 'pk.eyJ1IjoiZXppemljIiwiYSI6ImNrNms2aG9pbzAxM3gzZW1jd3RzcTgybTAifQ.NCuMB0JAaNAzgnUQoJUPRw';
+var map = new mapboxgl.Map({
+container: 'map',
+style: 'mapbox://styles/ezizic/ck8hqpeyn00w31invth6d0oep', //hosted style id
+center: [-108.69, 34.4], // starting position
+zoom: 2// starting zoom
+});
+map.on('load', function() {
+         map.addSource('Earthquakes', {
+         type: 'vector',
+         url: 'mapbox://mapbox.2opop9hr'
+         });
+         map.addLayer({
+         'id': 'Earthquakes',
+         'type': 'circle',
+         'source': 'Earthquakes',
+         'layout': {
+         'visibility': 'visible'
+         },
+         'paint': {
+         'circle-radius': 8,
+         'circle-color': 'rgba(76, 25, 25, 0.5)'
+         },
+         'source-layer': 'museum-cusco'
+         });
+         map.addSource('Volcanoes', {
+         type: 'vector',
+         url: 'mapbox://mapbox.mapbox-terrain-v2'
+         });
+         map.addLayer({
+         'id': 'Volcanoes',
+         'type': 'line',
+         'source': 'Volcanoes',
+         'source-layer': 'contour',
+         'layout': {
+         'visibility': 'visible',
+         'line-join': 'round',
+         'line-cap': 'round'
+         },
+         'paint': {
+         'line-color': '#877b59',
+         'line-width': 1
+         }
+         });
+         map.addSource('Volcanoes', {
+         type: 'vector',
+         url: 'mapbox://mapbox.2opop9hr'
+         });
+         map.addLayer({
+         'id': 'Earthquakes',
+         'type': 'circle',
+         'source': 'Earthquakes',
+         'layout': {
+         'visibility': 'visible'
+         },
+         'paint': {
+         'circle-radius': 8,
+         'circle-color': 'rgba(76, 25, 25, 0.5)'
+         },
+         'source-layer': 'museum-cusco'
+         });
+         });
+         var toggleableLayerIds = ['Volcanoes', 'Earthquakes'];
+         for (var i = 0; i < toggleableLayerIds.length; i++) {
+         var id = toggleableLayerIds[i];
+         var link = document.createElement('a');
+         link.href = '#';
+         link.className = 'active';
+         link.textContent = id;
+         link.onclick = function(e) {
+         var clickedLayer = this.textContent;
+         e.preventDefault();
+         e.stopPropagation();
+         var visibility = map.getLayoutProperty(clickedLayer, 'visibility');
+         if (visibility === 'visible') {
+         map.setLayoutProperty(clickedLayer, 'visibility', 'none');
+         this.className = '';
+         } else {
+         this.className = 'active';
+         map.setLayoutProperty(clickedLayer, 'visibility', 'visible');
+         }
+         };
+         var layers = document.getElementById('menu');
+         layers.appendChild(link);
+         }
+         </script>
+         </body>
+        map.addSource('nearest-volcano', {
+            type: 'geojson',
+            data: {
+              type: 'FeatureCollection',
+              features: []
+            }
+          });
+    }
+);
+// on a click, check to see if we are clicking on a fault line, then if so, open a popup.
+map.on('click', function(e) {
+  var features = map.queryRenderedFeatures(e.point, {
+    layers: ['raw-fault-a7y26j'] // replace this with the name of the layer
+	});
+  if (!features.length) {
+    return;
+  }
+  //var feature = features[0];
+  //console.log(features)
+  var FaultFeature = features[0];
+  var nearestVolcano = turf.nearest(FaultFeature, VolcanoGeoJSONdata);
+  if (nearestVolcano !== null) {
+    map.getSource('nearest-Volcano').setData({
+      type: 'FeatureCollection',
+      features: [nearestVolcano]
+    });
+    map.addLayer({
+      id: 'nearest-Volcano',
+      type: 'circle',
+      source: 'nearest-Volcano',
+      paint: {
+        'circle-radius': 12,
+        'circle-color': 'rgba(0, 0, 255, 0.3)'
+      }
+    }, 'historical20significant20volc-4fbup8');
+  var popup = new mapboxgl.Popup({ offset: [0, -15] })
+    .setLngLat(FaultFeature.geometry.coordinates)
+    .setHTML('<h3>' + FaultFeature.properties.NAME + '</h3>'+ "<p>"+"</p>")
+    .addTo(map);
+}
+});
+// on a click, check to see if we are clicking on a volcano, then if so, open a popup.
+map.on('click', function(e) {
+  var features = map.queryRenderedFeatures(e.point, {
+    layers: ['historical20significant20volc-4fbup8']
+  });
+  if (!features.length) {
+    return;
+  }
+  var feature = features[0];
+  var popup = new mapboxgl.Popup({ offset: [0, -15] })
+    .setLngLat(feature.geometry.coordinates)
+    .setHTML('<h3>' + feature.properties.NAME + '</h3>')
+    .addTo(map);
+    map.getCanvas().style.cursor = features.length ? 'pointer' : '';
+});
+</script>
+</body>
+</html>
